@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<style>
+:root{
+  --navy:#082541; --navy2:#1b4772; --gold:#efc173; --cream:#f6f3eb; --ink:#1f2329; --muted:#8a919c; --soft:#eef2f7;
+  --W:864px; --H:1152px; --side:56px; --fs:34px; --lh:1.85;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#d9dde3;font-family:"PingFang SC","Noto Sans CJK SC","Noto Sans SC","Noto Color Emoji",sans-serif;color:var(--ink);
+  -webkit-font-smoothing:antialiased}
+#pages{display:flex;flex-wrap:wrap;gap:24px;padding:24px}
+.page{width:var(--W);height:var(--H);background:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.hdr{height:150px;flex:none;display:flex;align-items:center;padding:0 var(--side);gap:20px}
+.av{width:82px;height:82px;border-radius:50%;background:var(--navy) center/cover no-repeat;flex:none;
+  box-shadow:0 0 0 3px #fff,0 0 0 5px rgba(8,37,65,.15)}
+.who{flex:1;display:flex;flex-direction:column;gap:6px}
+.name{font-size:30px;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--ink)}
+.tick{width:30px;height:30px}
+.handle{font-size:24px;color:var(--muted)}
+.more{font-size:40px;color:#b3b9c2;letter-spacing:2px;line-height:1;padding-bottom:16px}
+.body{flex:1;padding:0 var(--side);overflow:hidden;position:relative}
+.ftr{height:84px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 var(--side);color:var(--muted);font-size:22px}
+.ftr .bar{width:56px;height:6px;border-radius:3px;background:var(--gold)}
+.ftr .pn{font-variant-numeric:tabular-nums;letter-spacing:1px}
+.ftr .pn b{color:var(--navy);font-weight:700}
+/* blocks */
+.b{text-wrap:pretty;font-size:var(--fs);line-height:var(--lh);text-align:justify;line-break:strict;word-break:normal;overflow-wrap:anywhere}
+.b strong{color:var(--navy);font-weight:700}
+.b.h{font-size:38px;font-weight:700;color:var(--navy);line-height:1.5;padding:6px 0 6px 20px;border-left:8px solid var(--gold);margin-top:10px}
+.b.li{padding-left:1.45em;text-indent:-1.45em}
+.b.li.cont{text-indent:0}
+.b.dot{padding-left:1.45em}
+.b.dot::before{content:"·";display:inline-block;width:.9em;margin-left:-.9em;color:var(--navy);font-weight:700}
+.b.punch{text-wrap:balance;background:var(--soft);border-radius:18px;padding:26px 30px;font-size:38px;font-weight:700;color:var(--navy);line-height:1.6;text-align:left}
+.b.punch strong{color:var(--navy)}
+.b.img{text-align:center}
+.b.img img{width:100%;border-radius:14px;display:block;border:1px solid #e6e9ee}
+/* cover */
+.b.contlabel{font-size:26px;line-height:1.4;font-weight:700;color:var(--muted);padding-left:16px;border-left:6px solid var(--gold);text-align:left}
+/* cover: logo navy background, cream text, gold accents; the logo itself sits bottom-right (same navy, blends in) */
+.page.cover{background:var(--navy)}
+.cover .name{color:var(--cream)} .cover .handle{color:rgba(246,243,235,.6)} .cover .more{color:rgba(246,243,235,.45)}
+.cover .av{box-shadow:0 0 0 3px rgba(246,243,235,.85)}
+.cover .hdr,.cover .ftr{position:relative;z-index:2}
+.cover .tick circle{fill:var(--gold)} .cover .tick path{stroke:var(--navy)}
+.cover .ftr{color:rgba(246,243,235,.55)} .cover .ftr .pn b{color:var(--cream)}
+.cover .body{display:flex;flex-direction:column;justify-content:center;padding-bottom:150px;z-index:1}
+.cv-tag{display:inline-block;align-self:flex-start;border:3px solid var(--gold);color:var(--gold);font-size:28px;font-weight:700;padding:8px 24px;border-radius:999px;letter-spacing:2px}
+.cv-title{font-size:92px;font-weight:900;line-height:1.3;color:var(--cream);margin:44px 0 40px;letter-spacing:1px;line-break:strict}
+.cv-title .l{display:block;white-space:nowrap;width:max-content}
+.cv-title em{font-style:normal;color:var(--gold)}
+.cv-rule{width:120px;height:10px;border-radius:5px;background:var(--gold);margin-bottom:36px}
+.cv-sub{font-size:40px;color:rgba(246,243,235,.88);font-weight:500;line-height:1.5}
+.cv-logo{position:absolute;right:-30px;bottom:30px;width:400px;height:400px;background:center/contain no-repeat;pointer-events:none;z-index:0}
+</style></head>
+<body><div id="pages"></div>
+<template id="tpl-page">
+<section class="page"><div class="hdr"><div class="av"></div>
+<div class="who"><div class="name"><span class="nm"></span><svg class="tick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1b4772"/><path d="M7 12.4l3.2 3.1L17.2 8.6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="handle"></div></div><div class="more">···</div></div>
+<div class="body"></div><div class="ftr"><span class="bar"></span><span class="pn"></span></div></section>
+</template>
+<script>
+function newPage(opts){
+  const n=document.getElementById('tpl-page').content.firstElementChild.cloneNode(true);
+  n.querySelector('.nm').textContent=opts.name; n.querySelector('.handle').textContent=opts.handle;
+  if(opts.logo) n.querySelector('.av').style.backgroundImage=`url("${opts.logo}")`;
+  if(window.__pageLh){ n.style.setProperty('--lh', window.__pageLh); n.dataset.lh=window.__pageLh; }
+  document.getElementById('pages').appendChild(n); return n;
+}
+function mk(b){
+  const d=document.createElement('div'); d.className='b '+(b.cls||''); d.innerHTML=b.html;
+  if(b.cls==='img' && window.__imgScale && window.__imgScale<100){ const im=d.querySelector('img'); im.style.width=window.__imgScale+'%'; im.style.margin='0 auto'; }
+  const g=Math.round((b.gap||0)*(window.__gapScale||1)); d.dataset.gap=g; d.style.marginTop=g+'px'; return d;
+}
+function overflows(body){ return body.scrollHeight>body.clientHeight+1; }
+function waitImgs(){ return Promise.all([...document.images].map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r;}))); }
+function lineH(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs'))*parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lh')); }
+function fillOf(body){ const lc=body.lastElementChild; return lc?(lc.offsetTop+lc.offsetHeight)/body.clientHeight:0; }
+function realKids(body){ return [...body.children].filter(c=>!c.dataset.label); }
+async function tryFit(blocks){
+  const p=newPage(window.__o), body=p.querySelector('.body');
+  blocks.forEach((b,ix)=>{ const el=mk(b); if(ix===0) el.style.marginTop='0px'; body.appendChild(el); });
+  await waitImgs();
+  if(!overflows(body)) return p;
+  const imgs=[...body.querySelectorAll('.b.img img')];
+  for(let k=95;imgs.length && k>=60;k-=5){
+    imgs.forEach(i=>{ i.style.width=k+'%'; i.style.margin='0 auto'; });
+    if(!overflows(body)){ p.dataset.imgScale=(k/100).toFixed(2); return p; }
+  }
+  p.remove(); return null;
+}
+// paginate a list of blocks starting on a fresh page; label = small "N️⃣ 标题（续）" shown on continuation pages
+async function flow(blocks, label){
+  const o=window.__o, first=document.querySelectorAll('.page').length;
+  let page=newPage(o), body=page.querySelector('.body'), count=0;
+  const flush=()=>{page=newPage(o); body=page.querySelector('.body'); count=0;
+    if(label){ const l=document.createElement('div'); l.className='b contlabel'; l.innerHTML=label; l.dataset.label='1'; body.appendChild(l); } };
+  const topGap=()=>label&&body.firstElementChild&&body.firstElementChild.dataset.label?'18px':'0px';
+  for(let i=0;i<blocks.length;i++){
+    const b=blocks[i];
+    let el=mk(b);
+    if(count===0) el.style.marginTop=topGap();
+    body.appendChild(el);
+    if(b.cls==='img'){ await waitImgs(); }
+    if(!overflows(body)){ count++; continue; }
+    body.removeChild(el);
+    if(b.cls==='img' && count>0 && !(window.__oneImg && body.querySelector('.b.img'))){ // shrink image into the remaining space if it keeps >=70% of its height
+      const used=body.lastElementChild.offsetTop+body.lastElementChild.offsetHeight;
+      const room=body.clientHeight-used-Math.round((b.gap||0)*(window.__gapScale||1))-4;
+      const cs=getComputedStyle(body); const nat=(body.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight))*(el.querySelector('img').naturalHeight/el.querySelector('img').naturalWidth);
+      if(room>=nat*(window.__o.noOrphan?0.6:0.7)){
+        const im=el.querySelector('img'); im.style.height=room+'px'; im.style.width='auto'; im.style.margin='0 auto';
+        body.appendChild(el);
+        if(!overflows(body)){ count++; continue; }
+        body.removeChild(el);
+      }
+    }
+    if(b.cls==='img' && count===0){ // image alone too tall: shrink
+      const lc=body.lastElementChild; const used=lc?lc.offsetTop+lc.offsetHeight+18:0;
+      el.querySelector('img').style.maxHeight=(body.clientHeight-used-10)+'px'; el.querySelector('img').style.width='auto'; el.querySelector('img').style.margin='0 auto';
+      body.appendChild(el); count++; continue;
+    }
+    // try splitting a long text block at sentence boundaries
+    if(b.units && b.units.length>1){
+      let k=0; const part={...b};
+      for(let j=1;j<b.units.length;j++){
+        part.html=b.units.slice(0,j).join(''); const t=mk(part); if(count===0) t.style.marginTop=topGap(); body.appendChild(t);
+        const ok=!overflows(body); body.removeChild(t); if(ok) k=j; else break;
+      }
+      if(k>=1){
+        part.html=b.units.slice(0,k).join(''); const t=mk(part); if(count===0) t.style.marginTop=topGap(); body.appendChild(t);
+        const rest={...b,units:b.units.slice(k),html:b.units.slice(k).join(''),gap:0,cls:(b.cls||'')+' cont'};
+        blocks.splice(i+1,0,rest); flush(); continue;
+      }
+    }
+    if(count===0){ // cannot fit even on an empty page
+      const e2=mk(b); e2.style.marginTop=topGap(); body.appendChild(e2); count++;
+      window.__warnings=(window.__warnings||[]).concat(['block too tall for one page: '+b.html.slice(0,40)]);
+      continue;
+    }
+    // move trailing keep-with-next blocks (headings / lead-ins) to the next page
+    const carry=[];
+    let bi=i-1;
+    while(realKids(body).length>1 && blocks[bi] && blocks[bi].kwn){
+      carry.unshift(body.lastElementChild); body.removeChild(body.lastElementChild); bi--;
+    }
+    flush();
+    carry.forEach((c,ix)=>{ if(ix===0) c.style.marginTop=topGap(); body.appendChild(c); count++; });
+    i--; // retry this block on the new page
+  }
+  if(count===0) page.remove();
+  // section mode: balance the tail of a multi-page group so the last page is not a lone line / lone image.
+  // Moves whole blocks from the previous page while the last page is under 50% full (or holds only an image),
+  // the move fits, and (unless the last page has no text) the previous page stays about as full as the last one.
+  if(window.__o.noOrphan){
+    const mine=[...document.querySelectorAll('.page')].slice(first);
+    for(let n=0;n<4 && mine.length>1;n++){
+      const lb=mine[mine.length-1].querySelector('.body'), pb=mine[mine.length-2].querySelector('.body');
+      const pk=realKids(pb), kids=realKids(lb);
+      const textless=kids.every(k=>k.classList.contains('img'));
+      if((fillOf(lb)>=0.5 && !textless) || pk.length<2) break;
+      const m=pk[pk.length-1]; if(pk[pk.length-2].classList.contains('h')) break;  // never strand a heading
+      const ref=kids[0]||null;
+      pb.removeChild(m);
+      if(ref) ref.style.marginTop=ref.dataset.gap+'px';
+      lb.insertBefore(m, ref); m.style.marginTop=(lb.firstElementChild===m)?'0px':'18px';
+      if(overflows(lb) || (!textless && fillOf(pb)<fillOf(lb)*0.9)){   // undo
+        lb.removeChild(m); pb.appendChild(m); m.style.marginTop=m.dataset.gap+'px';
+        if(ref) ref.style.marginTop=(lb.firstElementChild===ref)?'0px':'18px';
+        break;
+      }
+    }
+  }
+}
+// section mode: lay a group out on as few pages as possible, preferring the loosest settings that achieve it.
+// Settings go from normal (line height from opts, images 100%) to tight (line height 1.78 on these pages,
+// images down to 55% of the content width). Font size never changes.
+const GROUP_CONFIGS=[[0,100],[0,90],[0,80],[0,70],[1.78,70],[1.78,62],[1.78,55]];
+async function runCfg(g,lh,sc){
+  const before=document.querySelectorAll('.page').length;
+  window.__pageLh=lh||null; window.__imgScale=sc;
+  await flow(g.blocks.map(b=>({...b})), g.label||null);
+  window.__pageLh=null; window.__imgScale=100;
+  return [...document.querySelectorAll('.page')].slice(before);
+}
+// grow a page's images (uniformly) into the leftover space: largest width % (<=100, content width) that does not
+// overflow. Returns the scale in % (100 = full width); 0 if the page has no images.
+function growImgs(p){
+  const body=p.querySelector('.body'), imgs=[...body.querySelectorAll('.b.img img')];
+  if(!imgs.length) return 0;
+  const saved=imgs.map(i=>i.getAttribute('style')||'');
+  const set=k=>imgs.forEach(i=>{ i.style.width=k+'%'; i.style.height=''; i.style.maxHeight=''; i.style.margin='0 auto'; });
+  let lo=0, hi=100; set(100);
+  if(!overflows(body)) lo=100;
+  else { for(let k=99;k>=30;k--){ set(k); if(!overflows(body)){ lo=k; break; } } }
+  if(!lo){ imgs.forEach((i,ix)=>i.setAttribute('style',saved[ix])); return -1; }
+  set(lo); if(lo<100) p.dataset.imgScale=(lo/100).toFixed(2); else delete p.dataset.imgScale;
+  return lo;
+}
+// a multi-page group is "crowded" if a page holds 2+ images that cannot reach 80% width there
+const LARGE=80;
+function crowded(gp){ return gp.length>1 && gp.some(p=>p.querySelectorAll('.b.img img').length>1 && growImgs(p)<LARGE); }
+async function layoutGroup(g){
+  let keep=null;
+  for(let n=1;n<=8 && !keep;n++){
+    for(const [lh,sc] of GROUP_CONFIGS){
+      const wl=(window.__warnings||[]).length;
+      const gp=await runCfg(g,lh,sc);
+      const last=(n===8 && lh===1.78 && sc===55);
+      if(gp.length<=n || last){
+        gp.forEach(p=>{ if(sc<100 && p.querySelector('.b.img')) p.dataset.imgScale=(sc/100).toFixed(2); });
+        keep=gp; break;
+      }
+      gp.forEach(p=>p.remove()); if(window.__warnings) window.__warnings.length=wl;
+    }
+  }
+  // section mode: rather than two small images on one page, allow one more page so each page keeps one image large
+  if(window.__o.noOrphan && crowded(keep)){
+    const n0=keep.length, wl0=(window.__warnings||[]).length;
+    window.__oneImg=true;
+    for(const [lh,sc] of GROUP_CONFIGS){
+      const wl=(window.__warnings||[]).length;
+      const gp=await runCfg(g,lh,sc);
+      if(gp.length<=n0+1 && !crowded(gp) && !gp.some(p=>overflows(p.querySelector('.body')))){
+        window.__oneImg=false; keep.forEach(p=>p.remove());
+        gp.forEach(p=>{ p.dataset.split1img='1'; });
+        return gp;
+      }
+      gp.forEach(p=>p.remove()); if(window.__warnings) window.__warnings.length=wl;
+    }
+    window.__oneImg=false;
+    keep.forEach(p=>growImgs(p));   // restore measured state (crowded() already grew them)
+  }
+  return keep;
+}
+// section mode: pull the opening paragraph of the outro (summary) up onto the previous section's last page if it
+// fits there with that page's images still >=80% wide AND the rest of the outro then needs fewer pages.
+async function layoutOutro(g){
+  const prev=[...document.querySelectorAll('.page')].pop();
+  const plain=await layoutGroup(g);
+  if(!prev || prev.classList.contains('cover') || !g.blocks.length) return {pages:plain, merged:0};
+  const p0=g.blocks[0].para; let k=0; while(k<g.blocks.length && g.blocks[k].para===p0) k++;
+  if(k>=g.blocks.length) return {pages:plain, merged:0};
+  const body=prev.querySelector('.body'), imgs=[...body.querySelectorAll('.b.img img')];
+  const saved=imgs.map(i=>i.getAttribute('style')||''), bodyStyle=body.getAttribute('style')||'', prevScale=prev.dataset.imgScale;
+  const added=g.blocks.slice(0,k).map(b=>{ const el=mk(b); body.appendChild(el); return el; });
+  const sc=growImgs(prev);
+  const undo=()=>{ added.forEach(e=>e.remove()); imgs.forEach((i,ix)=>i.setAttribute('style',saved[ix]));
+    body.setAttribute('style',bodyStyle); if(prevScale) prev.dataset.imgScale=prevScale; else delete prev.dataset.imgScale; };
+  if(overflows(body) || (imgs.length && sc<LARGE)){ undo(); return {pages:plain, merged:0}; }
+  const rest=await layoutGroup({...g, blocks:g.blocks.slice(k)});
+  if(rest.length<plain.length){ plain.forEach(p=>p.remove()); prev.dataset.mergedOutro='1'; return {pages:rest, merged:k}; }
+  rest.forEach(p=>p.remove()); undo(); return {pages:plain, merged:0};
+}
+async function build(data){
+  const o=data.opts;
+  if(o.lh) document.documentElement.style.setProperty('--lh', o.lh);
+  window.__gapScale=o.gapScale||1;
+  // cover
+  if(o.cover){
+    const p=newPage(o); p.classList.add('cover');
+    const body=p.querySelector('.body');
+    body.innerHTML=`<span class="cv-tag">${o.coverTag||''}</span><div class="cv-title">${data.titleLines.map(l=>`<span class="l">${l}</span>`).join('')}</div><div class="cv-rule"></div><div class="cv-sub">${o.coverSub||''}</div>`;
+    if(o.logo){ p.insertAdjacentHTML('beforeend','<div class="cv-logo"></div>'); p.querySelector('.cv-logo').style.backgroundImage=`url("${o.logo}")`; }
+    if(!o.coverSub){ body.querySelector('.cv-sub').remove(); }
+    if(!o.coverTag) body.querySelector('.cv-tag').remove();
+    const t=body.querySelector('.cv-title'); let fs=96;
+    const fits=()=>[...t.querySelectorAll('.l')].every(l=>l.getBoundingClientRect().width<=t.clientWidth) && !overflows(body);
+    t.style.fontSize=fs+'px'; while(!fits() && fs>48){ fs-=2; t.style.fontSize=fs+'px'; }
+  }
+  window.__o=o;
+  const all=data.groups?data.groups.flatMap(g=>g.blocks):data.blocks;
+  for(const b of all){ if(b.cls==='img'){ const i=new Image(); i.src=b.src; } }   // preload images
+  if(!data.groups){
+    await flow(data.blocks, null);                       // continuous mode (unchanged behaviour)
+  } else {
+    for(const g of data.groups){
+      const before=document.querySelectorAll('.page').length;
+      if(g.kind==='outro') await layoutOutro(g); else await layoutGroup(g);
+      const gp=[...document.querySelectorAll('.page')].slice(before);
+      gp.forEach((p,ix)=>{ p.dataset.kind=g.kind; p.dataset.name=g.name; if(ix===gp.length-1) p.dataset.lastOfGroup='1'; });
+    }
+    // under-filled pages: images are already at full content width, so centre the content vertically
+    // (only a group's last page; a section's first page stays top-aligned when it continues on the next page)
+    // images grow into whatever space is left on their page (up to full content width, never overflowing)
+    document.querySelectorAll('.page[data-kind]').forEach(p=>growImgs(p));
+    document.querySelectorAll('.page[data-kind]').forEach(p=>{
+      const b=p.querySelector('.body'); const f=fillOf(b); p.dataset.fill=f.toFixed(2);
+      if(f<0.6 && p.dataset.lastOfGroup){
+        // (images were already grown to the largest size that fits by growImgs)
+        if(!overflows(b)){ b.style.display='flex'; b.style.flexDirection='column'; b.style.justifyContent='center'; p.dataset.centered='1'; }
+      }
+    });
+  }
+  // section mode, pages with images and >=15% free space (10-09 Chris): spread the free space around the images
+  // instead of leaving a blank bottom. Each image gets an equal share above and below it (the share below the last
+  // block stays at the bottom), so text stays top-aligned and each image sits centred in its remaining area.
+  if(data.groups){
+    document.querySelectorAll('.page[data-kind]').forEach(p=>{
+      const b=p.querySelector('.body'), kids=[...b.children], imgs=kids.filter(k=>k.classList.contains('img'));
+      if(!imgs.length) return;
+      if(p.dataset.centered){ b.style.display=''; b.style.flexDirection=''; b.style.justifyContent=''; delete p.dataset.centered; }
+      const free=b.clientHeight-(b.lastElementChild.offsetTop+b.lastElementChild.offsetHeight);
+      if(free<0.15*b.clientHeight) return;
+      const share=Math.floor(free/(2*imgs.length));
+      imgs.forEach(el=>{
+        el.style.marginTop=(parseFloat(el.style.marginTop)||0)+share+'px';
+        const nx=el.nextElementSibling; if(nx) nx.style.marginTop=(parseFloat(nx.style.marginTop)||0)+share+'px';
+      });
+      if(overflows(b)){ window.__warnings=(window.__warnings||[]).concat(['spread overflow p'+p.dataset.name]); }
+      p.dataset.spread=Math.round(free/b.clientHeight*100);
+    });
+  }
+  // page numbers
+  const pages=[...document.querySelectorAll('.page')];
+  pages.forEach((p,ix)=>{ p.querySelector('.pn').innerHTML=`<b>${ix+1}</b> / ${pages.length}`; });
+  // overflow check
+  const w=[]; pages.forEach((p,ix)=>{ if(overflows(p.querySelector('.body'))) w.push('page '+(ix+1)+' overflows'); });
+  const lb=pages[pages.length-1].querySelector('.body'); const lc=lb.lastElementChild;
+  const lastFill=lc?(lc.offsetTop+lc.offsetHeight)/lb.clientHeight:0;
+  const outline=pages.map((p,ix)=>{ const b=p.querySelector('.body'); const t=(b.innerText||'').replace(/\s+/g,' ').trim();
+    return (p.classList.contains('cover')?'[封面] ':(p.dataset.kind?'['+p.dataset.name+(p.dataset.mergedOutro?' + 总结':'')+'] ':''))+t.slice(0,26)+(t.length>26?'…':'')
+      +` | imgs ${b.querySelectorAll('img').length}`+(p.classList.contains('cover')?'':` | fill ${Math.round((p.dataset.fill?+p.dataset.fill:fillOf(b))*100)}%`)
+      +(p.dataset.imgScale?` | img ${Math.round(p.dataset.imgScale*100)}%`:'')+(p.dataset.lh?` | lh ${p.dataset.lh}`:'')+(p.dataset.centered?' | centred':'')+(p.dataset.spread?` | spread ${p.dataset.spread}% free`:''); });
+  return {lastFill, pages:pages.length, outline, warnings:(window.__warnings||[]).concat(w)};
+}
+</script></body></html>
