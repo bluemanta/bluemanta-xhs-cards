@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+
+# Generated card output (render.py → pages/, download_images.py → images/)
+pages/
+images/
+*.zip
